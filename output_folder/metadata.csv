@@ -1,9 +1,0 @@
-,Variable,Read-in Type,Nulls,Type,Unique,Percent Unique
-0,idType,object,0,Boolean,2,0.0%
-1,idValue,object,0,ID,12696754,100.0%
-2,age,int64,0,Categorical,71,0.0%
-3,birthInfo,object,0,Categorical,73,0.0%
-4,gender,object,0,Boolean,2,0.0%
-5,countryCode,object,0,Categorical,1,0.0%
-6,age_time,int64,0,Continuous,9555911,75.3%
-7,gender_time,int64,0,Continuous,8179529,64.4%
