@@ -149,7 +149,7 @@ def main():
     input_location = os.environ.get('INPUT_DATA')
     logging.info(f'Reading data in from {input_location}')
     
-    df, number_of_files = read(os.environ.get('INPUT_DATA'))
+    df, number_of_files, extension, file_name = read(os.environ.get('INPUT_DATA'))
 
     logging.info(f'Data successfully read.')
     logging.info(f'Read in {number_of_files} files.')
@@ -163,4 +163,9 @@ def main():
 
     logging.info(f'Finished Profiling.')
 
-    return metadata_df, number_of_rows, number_of_columns
+    metadata_df.to_csv(os.environ.get('OUTPUT_DATA') + '/metadata.csv')
+
+    logging.info(f'Data profile output written.')
+
+if __name__ == '__main__':
+    main()
