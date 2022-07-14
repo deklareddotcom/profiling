@@ -128,6 +128,22 @@ def numeric_exploration1(metadata_df, df):
 
     return numerical_list
 
+# Output the names, file extensions, other text info
+def text_info(number_of_files, extension, file_name,
+              number_of_rows, number_of_columns):
+    line1 = 'Files in directory: ' + '{:,}'.format(number_of_files)
+    line2 = 'File extension: ' + str(extension)
+    line3 = 'File name: ' + str(file_name)
+    line4 = 'Observations: ' + '{:,}'.format(number_of_rows)
+    line5 = 'Variables: ' + '{:,}'.format(number_of_columns)
+
+    lines = [line1, line2, line3, line4, line5]
+
+    with open(os.environ.get('OUTPUT_DATA') + '/results.txt', 'w') as f:
+        for line in lines:
+            f.write(line)
+            f.write('\n')
+
 # Main function for Docker
 def main():
 
@@ -163,7 +179,10 @@ def main():
 
     logging.info(f'Finished Profiling.')
 
+    # Outputs
     metadata_df.to_csv(os.environ.get('OUTPUT_DATA') + '/metadata.csv')
+    text_info(number_of_files, extension, file_name,
+              number_of_rows, number_of_columns)
 
     logging.info(f'Data profile output written.')
 
