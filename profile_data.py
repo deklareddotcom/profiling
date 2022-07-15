@@ -9,7 +9,6 @@ os.environ['MPLCONFIGDIR'] = os.environ.get('OUTPUT_DATA')
 
 import glob
 import logging
-import numpy as np
 import pandas as pd
 
 # read in the data
@@ -128,6 +127,7 @@ def numeric_exploration1(metadata_df, df):
 
     return numerical_list
 
+'''
 # Output the names, file extensions, other text info
 def text_info(number_of_files, extension, file_name,
               number_of_rows, number_of_columns):
@@ -143,6 +143,34 @@ def text_info(number_of_files, extension, file_name,
         for line in lines:
             f.write(line)
             f.write('\n')
+'''
+
+def create_html(metadata_df, number_of_files, extension, file_name,
+                number_of_rows, number_of_columns):
+    # Save variables as correctly formatted strings
+    metadata_df_html = metadata_df.to_html(index = False, justify = 'center')
+
+    # Create and open the file
+    html_file = open(os.environ.get('OUTPUT_DATA') + '/Profile.html', 'w')
+
+    # Write to the HTML file
+    html_file.write('''<html>
+    <head>
+    <title>HTML File</title>
+    </head>
+    <body>
+    <h1> Data Profile </h1>
+    </body>
+    <html>''')
+
+    html_file.write('<p>Files in directory: {code}</p>'.format(code = '{:,}'.format(number_of_files)))
+    html_file.write('<p>File extension: {code}</p>'.format(code = extension))
+    html_file.write('<p>File name: {code}</p>'.format(code = file_name))
+    html_file.write('<p>Observations: {code}<p>'.format(code = '{:,}'.format(number_of_rows)))
+    html_file.write('<p>Variables: {code}</p>'.format(code = '{:,}'.format(number_of_columns)))
+    html_file.write(metadata_df_html)
+
+    html_file.close()
 
 # Main function for Docker
 def main():
@@ -180,9 +208,11 @@ def main():
     logging.info(f'Finished Profiling.')
 
     # Outputs
-    metadata_df.to_csv(os.environ.get('OUTPUT_DATA') + '/metadata.csv')
-    text_info(number_of_files, extension, file_name,
-              number_of_rows, number_of_columns)
+    # metadata_df.to_csv(os.environ.get('OUTPUT_DATA') + '/metadata.csv')
+    # text_info(number_of_files, extension, file_name,
+    #           number_of_rows, number_of_columns)
+    create_html(metadata_df, number_of_files, extension, file_name,
+                number_of_rows, number_of_columns)
 
     logging.info(f'Data profile output written.')
 
