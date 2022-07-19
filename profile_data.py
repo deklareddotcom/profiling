@@ -8,6 +8,7 @@ os.environ['TMPDIR'] = os.environ.get('OUTPUT_DATA')
 os.environ['MPLCONFIGDIR'] = os.environ.get('OUTPUT_DATA')
 
 import glob
+import base64
 import logging
 import pandas as pd
 import seaborn as sns
@@ -215,6 +216,14 @@ def create_html(metadata_df, number_of_files, extension, file_name,
     metadata_df_html = metadata_df.to_html(index = False, justify = 'center')
     numeric_df_html = numeric_expl_df.to_html(index = True, justify = 'center')
 
+    # Create images to be HTML embeds
+    pearson_uri = base64.b64encode(open(os.environ.get('OUTPUT_DATA') + '/pearson_corr.png', 'rb').read()).decode('utf-8')
+    pearson_tag = '<img src="data:image/png;base64,{0}">'.format(pearson_uri)
+    kendall_uri = base64.b64encode(open(os.environ.get('OUTPUT_DATA') + '/kendall_corr.png', 'rb').read()).decode('utf-8')
+    kendall_tag = '<img src="data:image/png;base64,{0}">'.format(kendall_uri)
+    spearman_uri = base64.b64encode(open(os.environ.get('OUTPUT_DATA') + '/spearman_corr.png', 'rb').read()).decode('utf-8')
+    spearman_tag = '<img src="data:image/png;base64,{0}">'.format(spearman_uri)
+
     # Create and open the file
     html_file = open(os.environ.get('OUTPUT_DATA') + '/Profile.html', 'w')
 
@@ -243,8 +252,14 @@ def create_html(metadata_df, number_of_files, extension, file_name,
     html_file.write(metadata_df_html)
     html_file.write('</div><br><div class="myDiv"><h2>Numerical Variable Descriptive Statistics</h2>')
     html_file.write(numeric_df_html)
+    html_file.write('</div><br>')
+    html_file.write('<div class="myDiv"><h2>Correlation Matrix Heatmaps</h2><h3>Pearson</h3>')
+    html_file.write(pearson_tag + '<br>')
+    html_file.write('<h3>Kendall</h3>')
+    html_file.write(kendall_tag + '<br>')
+    html_file.write('<h3>Spearman</h3>')
+    html_file.write(spearman_tag)
     html_file.write('</div>')
-
     html_file.close()
 
 # Main function for Docker
@@ -289,6 +304,7 @@ def main():
     spearman_correlation(metadata_df, df)
 
     logging.info(f'Finished Profiling.')
+    logging.info(f'Creating HTML Report...')
 
     # Outputs
     # metadata_df.to_csv(os.environ.get('OUTPUT_DATA') + '/metadata.csv')
@@ -296,6 +312,11 @@ def main():
     #           number_of_rows, number_of_columns)
     create_html(metadata_df, number_of_files, extension, file_name,
                 number_of_rows, number_of_columns, numeric_expl_df)
+
+    # Delete the unnecessary files (plots)
+    os.remove(os.environ.get('OUTPUT_DATA') + '/pearson_corr.png')
+    os.remove(os.environ.get('OUTPUT_DATA') + '/kendall_corr.png')
+    os.remove(os.environ.get('OUTPUT_DATA') + '/spearman_corr.png')
 
     logging.info(f'Data profile output written.')
 
