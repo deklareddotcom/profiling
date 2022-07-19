@@ -23,7 +23,10 @@ def read(input_folder):
     # extension of the file
     last_period = list(find_all(all_files[0], '.'))[-1]
     extension = all_files[0][last_period:]
-    file_name = all_files[0]
+
+    # name of just file, not full path
+    last_slash = list(find_all(all_files[0], '/'))[-1]
+    file_name = all_files[0][last_slash:]
 
     # pull the data together
     li = []
@@ -122,7 +125,7 @@ def numeric_exploration1(metadata_df, df):
     numerical_list = []
     for column in numeric_df.columns:
         subset_data = numeric_df.loc[:, column]
-        numerical_list.append(subset_data.describe())
+        numerical_list.append(subset_data.describe().round(2).apply(lambda x: format(x, 'f')).str.slice(stop = -4))
     numerical_list = pd.concat(numerical_list, axis = 1)
 
     return numerical_list
@@ -146,9 +149,10 @@ def text_info(number_of_files, extension, file_name,
 '''
 
 def create_html(metadata_df, number_of_files, extension, file_name,
-                number_of_rows, number_of_columns):
+                number_of_rows, number_of_columns, numeric_df):
     # Save variables as correctly formatted strings
     metadata_df_html = metadata_df.to_html(index = False, justify = 'center')
+    numeric_df_html = numeric_df.to_html(index = True, justify = 'center')
 
     # Create and open the file
     html_file = open(os.environ.get('OUTPUT_DATA') + '/Profile.html', 'w')
@@ -156,6 +160,12 @@ def create_html(metadata_df, number_of_files, extension, file_name,
     # Write to the HTML file
     html_file.write('''<html>
     <head>
+    <style>
+    .myDiv {
+        border: 1px outset black;
+        text-align: left;
+    }
+    </style>
     <title>HTML File</title>
     </head>
     <body>
@@ -163,12 +173,16 @@ def create_html(metadata_df, number_of_files, extension, file_name,
     </body>
     <html>''')
 
-    html_file.write('<p>Files in directory: {code}</p>'.format(code = '{:,}'.format(number_of_files)))
-    html_file.write('<p>File extension: {code}</p>'.format(code = extension))
-    html_file.write('<p>File name: {code}</p>'.format(code = file_name))
-    html_file.write('<p>Observations: {code}<p>'.format(code = '{:,}'.format(number_of_rows)))
-    html_file.write('<p>Variables: {code}</p>'.format(code = '{:,}'.format(number_of_columns)))
+    html_file.write('<div class="myDiv"><h2>Overview</h2><p>Files in directory: {code}<br>'.format(code = '{:,}'.format(number_of_files)))
+    html_file.write('File extension: {code}<br>'.format(code = extension))
+    html_file.write('File name: {code}<br>'.format(code = file_name))
+    html_file.write('Observations: {code}<br>'.format(code = '{:,}'.format(number_of_rows)))
+    html_file.write('Variables: {code}</p></div><br>'.format(code = '{:,}'.format(number_of_columns)))
+    html_file.write('<div class="myDiv"><h2>Variable Overview</h2>')
     html_file.write(metadata_df_html)
+    html_file.write('</div><br><div class="myDiv"><h2>Numerical Variable Descriptive Statistics</h2>')
+    html_file.write(numeric_df_html)
+    html_file.write('</div>')
 
     html_file.close()
 
@@ -205,6 +219,9 @@ def main():
     # Variable Types
     metadata_df = metadata(df)
 
+    # Numeric Exploration
+    numeric_df = numeric_exploration1(metadata_df, df)
+
     logging.info(f'Finished Profiling.')
 
     # Outputs
@@ -212,7 +229,7 @@ def main():
     # text_info(number_of_files, extension, file_name,
     #           number_of_rows, number_of_columns)
     create_html(metadata_df, number_of_files, extension, file_name,
-                number_of_rows, number_of_columns)
+                number_of_rows, number_of_columns, numeric_df)
 
     logging.info(f'Data profile output written.')
 
