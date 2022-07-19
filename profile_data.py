@@ -10,6 +10,8 @@ os.environ['MPLCONFIGDIR'] = os.environ.get('OUTPUT_DATA')
 import glob
 import logging
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # read in the data
 # output consolidated DF, number of files
@@ -113,13 +115,20 @@ def metadata(df):
                              on = 'Variable')
     return full_metadata
 
-# Numeric Variable Exploration: Do not use variable type guesses
-def numeric_exploration1(metadata_df, df):
+# Helper function to create numeric data frame
+def create_numeric_df(metadata_df, df):
     # filter the data frame for just the numeric columns
     numeric_columns = metadata_df[metadata_df['Read-in Type'] != 'object']
 
     # filter for numeric columns
     numeric_df = df.loc[:, numeric_columns['Variable'].to_numpy()]
+
+    return numeric_df
+
+# Numeric Variable Exploration: Do not use variable type guesses
+def numeric_exploration1(metadata_df, df):
+    # grab data frame for only numeric values
+    numeric_df = create_numeric_df(metadata_df, df)
 
     # Loop through all the numeric columns for descriptive statistics
     numerical_list = []
@@ -129,6 +138,58 @@ def numeric_exploration1(metadata_df, df):
     numerical_list = pd.concat(numerical_list, axis = 1)
 
     return numerical_list
+
+# Create Correlations Images
+# 1. Pearson
+def pearson_correlation(metadata_df, df):
+    cmap = sns.diverging_palette(10, 150, as_cmap = True)
+
+    # grab data frame for only numeric values
+    numeric_df = create_numeric_df(metadata_df, df)
+    
+    # create correlation matrices and corresponding heatmaps
+    corr_matrix = numeric_df.corr().round(2)
+    plt.figure()
+    pearson_plot = sns.heatmap(corr_matrix,
+                               annot = True,
+                               cmap = cmap,
+                               square = True)
+    plt.savefig(os.environ.get('OUTPUT_DATA') + '/pearson_corr.png',
+                facecolor = 'w')
+
+# 2. Kendall
+def kendall_correlation(metadata_df, df):
+    cmap = sns.diverging_palette(10, 150, as_cmap = True)
+
+    # grab data frame for only numeric values
+    numeric_df = create_numeric_df(metadata_df, df)
+    
+    # create correlation matrices and corresponding heatmaps
+    corr_matrix = numeric_df.corr(method = 'kendall').round(2)
+    plt.figure()
+    kendall_plot = sns.heatmap(corr_matrix,
+                               annot = True,
+                               cmap = cmap,
+                               square = True)
+    plt.savefig(os.environ.get('OUTPUT_DATA') + '/kendall_corr.png',
+                facecolor = 'w')
+
+# 3. Spearman
+def spearman_correlation(metadata_df, df):
+    cmap = sns.diverging_palette(10, 150, as_cmap = True)
+
+    # grab data frame for only numeric values
+    numeric_df = create_numeric_df(metadata_df, df)
+    
+    # create correlation matrices and corresponding heatmaps
+    corr_matrix = numeric_df.corr(method = 'spearman').round(2)
+    plt.figure()
+    spearman_plot = sns.heatmap(corr_matrix,
+                                annot = True,
+                                cmap = cmap,
+                                square = True)
+    plt.savefig(os.environ.get('OUTPUT_DATA') + '/spearman_corr.png',
+                facecolor = 'w')
 
 '''
 # Output the names, file extensions, other text info
@@ -149,10 +210,10 @@ def text_info(number_of_files, extension, file_name,
 '''
 
 def create_html(metadata_df, number_of_files, extension, file_name,
-                number_of_rows, number_of_columns, numeric_df):
+                number_of_rows, number_of_columns, numeric_expl_df):
     # Save variables as correctly formatted strings
     metadata_df_html = metadata_df.to_html(index = False, justify = 'center')
-    numeric_df_html = numeric_df.to_html(index = True, justify = 'center')
+    numeric_df_html = numeric_expl_df.to_html(index = True, justify = 'center')
 
     # Create and open the file
     html_file = open(os.environ.get('OUTPUT_DATA') + '/Profile.html', 'w')
@@ -220,7 +281,12 @@ def main():
     metadata_df = metadata(df)
 
     # Numeric Exploration
-    numeric_df = numeric_exploration1(metadata_df, df)
+    numeric_expl_df = numeric_exploration1(metadata_df, df)
+
+    # Image Outputs
+    pearson_correlation(metadata_df, df)
+    kendall_correlation(metadata_df, df)
+    spearman_correlation(metadata_df, df)
 
     logging.info(f'Finished Profiling.')
 
@@ -229,7 +295,7 @@ def main():
     # text_info(number_of_files, extension, file_name,
     #           number_of_rows, number_of_columns)
     create_html(metadata_df, number_of_files, extension, file_name,
-                number_of_rows, number_of_columns, numeric_df)
+                number_of_rows, number_of_columns, numeric_expl_df)
 
     logging.info(f'Data profile output written.')
 
