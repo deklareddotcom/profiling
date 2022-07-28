@@ -138,6 +138,10 @@ def numeric_exploration1(metadata_df, df):
         numerical_list.append(subset_data.describe().round(2).apply(lambda x: format(x, 'f')).str.slice(stop = -4))
     numerical_list = pd.concat(numerical_list, axis = 1)
 
+    # transpose to keep column displays consistent
+    numerical_list = numerical_list.T
+    numerical_list = numerical_list.rename_axis('Variable').reset_index()
+
     return numerical_list
 
 # Create Correlations Images
@@ -214,7 +218,7 @@ def create_html(metadata_df, number_of_files, extension, file_name,
                 number_of_rows, number_of_columns, numeric_expl_df):
     # Save variables as correctly formatted strings
     metadata_df_html = metadata_df.to_html(index = False, justify = 'center')
-    numeric_df_html = numeric_expl_df.to_html(index = True, justify = 'center')
+    numeric_df_html = numeric_expl_df.to_html(index = False, justify = 'center')
 
     # Create images to be HTML embeds
     pearson_uri = base64.b64encode(open(os.environ.get('OUTPUT_DATA') + '/pearson_corr.png', 'rb').read()).decode('utf-8')
@@ -230,16 +234,34 @@ def create_html(metadata_df, number_of_files, extension, file_name,
     # Write to the HTML file
     html_file.write('''<html>
     <head>
-    <style>
-    .myDiv {
-        border: 1px outset black;
-        text-align: left;
-    }
-    </style>
-    <title>HTML File</title>
+        <style>
+            .myDiv {
+                border: 1px outset #dddddd;
+                text-align: left;
+            }
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+            td {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 5px;
+            }
+            tr:nth-child(even) {
+                background-color: #dddddd;
+            }
+            th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 7px;
+                background-color: #dddddd;
+            }
+        </style>
     </head>
     <body>
-    <h1> Data Profile </h1>
+        <h1> Data Profile </h1>
     </body>
     <html>''')
 
